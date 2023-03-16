@@ -24,8 +24,15 @@ app.post("/", async (req, res) => {
 
 app.get("/gameData", async (req, res) => {
   try {
-    const items = await animalCollection.list();
-    const data = items.map(({key, value}) => ({user_id: key, ...value}));
+    const data = [];
+    let lastEvaluatedKey = undefined;
+    
+    do {
+      const result = await animalCollection.list({lastEvaluatedKey});
+      lastEvaluatedKey = result.lastEvaluatedKey;
+      data.push(...result.items.map(({key, value}) => ({user_id: key, ...value})));
+    } while (lastEvaluatedKey !== undefined);
+    
     res.json(data);
   } catch (error) {
     console.error(error);
