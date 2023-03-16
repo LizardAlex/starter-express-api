@@ -1,17 +1,15 @@
-const { DynamoDBClient, PutItemCommand } = require("@aws-sdk/client-dynamodb");
+const { DynamoDBClient, PutItemCommand, ScanCommand } = require("@aws-sdk/client-dynamodb");
 const express = require("express");
+const path = require("path");
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 const client = new DynamoDBClient({ region: "us-east-1" });
 
 app.use(express.json());
+app.use(express.static(path.join(__dirname, "public")));
 
-app.get("/", (req, res) => {
-  // Отображение HTML страницы с помощью EJS
-  res.render("index.ejs");
-});
-
-app.post("/trackEvent", (req, res) => {
+app.post("/", (req, res) => {
   const { user_id, game_name, event_name, event_value } = req.body;
   const params = {
     TableName: "game_events",
@@ -41,7 +39,7 @@ app.get("/gameData", (req, res) => {
     ProjectionExpression: "user_id, game_name, event_name, event_value, created_at",
   };
   client
-    .scan(params)
+    .send(new ScanCommand(params))
     .then((data) => {
       res.json(data);
     })
@@ -49,6 +47,10 @@ app.get("/gameData", (req, res) => {
       console.error(err);
       res.sendStatus(500);
     });
+});
+
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
 app.listen(PORT, () => {

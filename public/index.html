@@ -1,50 +1,82 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
   <head>
-    <meta charset="UTF-8">
-    <title>Game Analytics</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <title>Game Data Visualization</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js" integrity="sha512-ENZsrxsJwTnTm1Qa6edqbUJHvLgQ/E9hBSt98o/uy7Z/+rcWzLlCwJkGc+V7yN1WY5XtlR5R5r5V7oZTF5kq/Q==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   </head>
   <body>
     <canvas id="myChart"></canvas>
     <script>
-      // Запрос на получение данных
-      fetch('/gameData')
-        .then(response => response.json())
-        .then(data => {
-          // Обработка полученных данных
-          const labels = [];
-          const values = [];
-          data.forEach(item => {
-            labels.push(item.created_at);
-            values.push(item.event_value);
-          });
-          
-          // Отрисовка графика
-          const ctx = document.getElementById('myChart').getContext('2d');
-          const chart = new Chart(ctx, {
-            type: 'line',
-            data: {
-              labels: labels,
-              datasets: [{
-                label: 'Game Analytics',
-                data: values,
-                backgroundColor: 'rgba(255, 99, 132, 0.2)',
-                borderColor: 'rgba(255, 99, 132, 1)',
-                borderWidth: 1
-              }]
-            },
-            options: {
-              scales: {
-                yAxes: [{
-                  ticks: {
-                    beginAtZero: true
-                  }
-                }]
-              }
+      console.log(123);
+      const xhr = new XMLHttpRequest();
+      xhr.open("GET", "/gameData");
+      xhr.onload = () => {
+        console.log(33122);
+        if (xhr.status === 200) {
+          console.log(xhr.responseText);
+          const data = JSON.parse(xhr.responseText);
+          console.log(data);
+          const games = {};
+          const gameNames = [];
+
+          data.Items.forEach((item) => {
+            if (!games[item.game_name.S]) {
+              games[item.game_name.S] = {
+                events: {},
+                labels: [],
+                values: [],
+              };
+              gameNames.push(item.game_name.S);
             }
+
+            const event_name = item.event_name.S;
+            const event_value = item.event_value.S;
+
+            if (!games[item.game_name.S].events[event_name]) {
+              games[item.game_name.S].events[event_name] = 0;
+            }
+
+            games[item.game_name.S].events[event_name] += parseInt(event_value);
           });
-        });
+
+          gameNames.forEach((gameName) => {
+            const events = games[gameName].events;
+
+            Object.keys(events).forEach((eventName) => {
+              games[gameName].labels.push(eventName);
+              games[gameName].values.push(events[eventName]);
+            });
+
+            const ctx = document.getElementById(`${gameName}-chart`).getContext("2d");
+            new Chart(ctx, {
+              type: "bar",
+              data: {
+                labels: games[gameName].labels,
+                datasets: [
+                  {
+                    label: `Game: ${gameName}`,
+                    data: games[gameName].values,
+                    backgroundColor: "rgba(54, 162, 235, 0.2)",
+                    borderColor: "rgba(54, 162, 235, 1)",
+                    borderWidth: 1,
+                  },
+                ],
+              },
+              options: {
+                scales: {
+                  y: {
+                    beginAtZero: true,
+                  },
+                },
+              },
+            });
+          });
+        } else {
+          console.error(xhr.statusText);
+        }
+      };
+      xhr.onerror = () => console.error(xhr.statusText);
+      xhr.send();
     </script>
   </body>
 </html>
