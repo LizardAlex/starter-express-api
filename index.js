@@ -4,12 +4,11 @@ const path = require("path");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const client = new DynamoDBClient({
-  region: "us-east-1",
-  credentials: new CredentialProviderChain([
-    () => new EnvironmentCredentials("AWS"),
-  ]),
-});
+const client = new DynamoDBClient({ region: "us-east-1",
+  credentials: {
+    accessKeyId: "ASIAR65RCVY2L5PX2ZXG",
+    secretAccessKey: "4SnYFR+Wewfo8q//Pyj9eKOi1eI3cQ2hIsat+L9L",
+  },});
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));
