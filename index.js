@@ -3,7 +3,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 const CyclicDB = require('cyclic-dynamodb');
-const db = CyclicDB('<your-cyclicdb-app-id>');
+const db = CyclicDB('vast-plum-badger-suitCyclicDB');
 
 app.use(express.json());
 app.use(express.static('public'));
