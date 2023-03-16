@@ -1,71 +1,51 @@
-const AWS = require('aws-sdk');
-const express = require('express');
-const bodyParser = require('body-parser');
-
-AWS.config.update({
-  region: 'us-east-1'
-});
-
-const docClient = new AWS.DynamoDB.DocumentClient();
-
+const { DynamoDBClient, PutItemCommand } = require("@aws-sdk/client-dynamodb");
+const express = require("express");
 const app = express();
-app.use(bodyParser.json());
+const PORT = process.env.PORT || 3000;
+const client = new DynamoDBClient({ region: "us-east-1" });
 
-const PORT = process.env.PORT || 8080;
+app.use(express.json());
 
-// Обработка запроса от игровой рекламы
-app.post('/trackingData', (req, res) => {
-  const {
-    user_id,
-    game_name,
-    event_name,
-    event_value,
-  } = req.body.Item;
-
+app.post("/", (req, res) => {
+  const { user_id, game_name, event_name, event_value } = req.body;
   const params = {
-    TableName: 'trackingData',
+    TableName: "game_events",
     Item: {
-      user_id,
-      game_name,
-      event_name,
-      event_value,
-      created_at: new Date().toISOString(),
+      user_id: { S: user_id },
+      game_name: { S: game_name },
+      event_name: { S: event_name },
+      event_value: { S: event_value },
+      created_at: { S: new Date().toISOString() },
     },
   };
-
-  docClient.put(params, (err, data) => {
-    if (err) {
-      console.error('Unable to add item. Error JSON:', JSON.stringify(err, null, 2));
-      res.status(500).send();
-    } else {
-      console.log('Added item:', JSON.stringify(data, null, 2));
-      res.status(200).send();
-    }
-  });
+  const command = new PutItemCommand(params);
+  client
+    .send(command)
+    .then(() => {
+      res.sendStatus(200);
+    })
+    .catch((err) => {
+      console.error(err);
+      res.sendStatus(500);
+    });
 });
 
-// Обработка запроса от фронтенда
-app.get('/', (req, res) => {
-  res.sendFile(__dirname + '/index.html');
-});
-
-// Обработка запроса данных для фронтенда
-app.get('/gameData', (req, res) => {
+app.get("/gameData", (req, res) => {
   const params = {
-    TableName: 'trackingData',
+    TableName: "game_events",
+    ProjectionExpression: "user_id, game_name, event_name, event_value, created_at",
   };
-
-  docClient.scan(params, (err, data) => {
-    if (err) {
-      console.error('Unable to scan the table. Error JSON:', JSON.stringify(err, null, 2));
-      res.status(500).send();
-    } else {
-      console.log('Scan succeeded:', JSON.stringify(data, null, 2));
-      res.json(data.Items);
-    }
-  });
+  client
+    .scan(params)
+    .then((data) => {
+      res.json(data);
+    })
+    .catch((err) => {
+      console.error(err);
+      res.sendStatus(500);
+    });
 });
 
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`Server listening on port ${PORT}`);
 });
