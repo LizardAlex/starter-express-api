@@ -1,60 +1,39 @@
-const { DynamoDBClient, PutItemCommand, ScanCommand } = require("@aws-sdk/client-dynamodb");
 const express = require("express");
-const path = require("path");
-
 const app = express();
 const PORT = process.env.PORT || 3000;
-const client = new DynamoDBClient({ region: "us-east-1",
-  credentials: {
-    accessKeyId: "ASIAR65RCVY2L5PX2ZXG",
-    secretAccessKey: "4SnYFR+Wewfo8q//Pyj9eKOi1eI3cQ2hIsat+L9L",
-  },});
+
+const CyclicDB = require('cyclic-dynamodb');
+const db = CyclicDB('<your-cyclicdb-app-id>');
 
 app.use(express.json());
-app.use(express.static(path.join(__dirname, "public")));
+app.use(express.static('public'));
 
-app.post("/", (req, res) => {
+app.post("/", async (req, res) => {
   const { user_id, game_name, event_name, event_value } = req.body;
-  const params = {
-    TableName: "game_events",
-    Item: {
-      user_id: { S: user_id },
-      game_name: { S: game_name },
-      event_name: { S: event_name },
-      event_value: { S: event_value },
-      created_at: { S: new Date().toISOString() },
-    },
-  };
-  const command = new PutItemCommand(params);
-  client
-    .send(command)
-    .then(() => {
-      res.sendStatus(200);
-    })
-    .catch((err) => {
-      console.error(err);
-      res.sendStatus(500);
+  try {
+    const animalCollection = db.collection("game_events");
+    await animalCollection.set(user_id, {
+      game_name: game_name,
+      event_name: event_name,
+      event_value: event_value,
+      created_at: new Date().toISOString(),
     });
+    res.sendStatus(200);
+  } catch (err) {
+    console.error(err);
+    res.sendStatus(500);
+  }
 });
 
-app.get("/gameData", (req, res) => {
-  const params = {
-    TableName: "game_events",
-    ProjectionExpression: "user_id, game_name, event_name, event_value, created_at",
-  };
-  client
-    .send(new ScanCommand(params))
-    .then((data) => {
-      res.json(data);
-    })
-    .catch((err) => {
-      console.error(err);
-      res.sendStatus(500);
-    });
-});
-
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "index.html"));
+app.get("/gameData", async (req, res) => {
+  try {
+    const animalCollection = db.collection("game_events");
+    const items = await animalCollection.getAll();
+    res.json(items);
+  } catch (err) {
+    console.error(err);
+    res.sendStatus(500);
+  }
 });
 
 app.listen(PORT, () => {
