@@ -6,7 +6,12 @@ const client = new DynamoDBClient({ region: "us-east-1" });
 
 app.use(express.json());
 
-app.post("/", (req, res) => {
+app.get("/", (req, res) => {
+  // Отображение HTML страницы с помощью EJS
+  res.render("index.ejs");
+});
+
+app.post("/trackEvent", (req, res) => {
   const { user_id, game_name, event_name, event_value } = req.body;
   const params = {
     TableName: "game_events",
