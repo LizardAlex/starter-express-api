@@ -3,7 +3,7 @@ const express = require("express");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-const db = CyclicDB(process.env.CYCLICDB_APP_ID);
+const db = CyclicDB("vast-plum-badger-suitCyclicDB");
 const animalCollection = db.collection('game_events');
 
 app.use(express.json());
