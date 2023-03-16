@@ -26,9 +26,9 @@ app.post("/", async (req, res) => {
 });
 
 app.get("/gameData", async (req, res) => {
+  const animalCollection = db.collection('game_events');
   try {
-    const animalCollection = db.collection("game_events");
-    const items = await animalCollection.getAll();
+    const items = await animalCollection.find({});
     res.json(items);
   } catch (err) {
     console.error(err);
