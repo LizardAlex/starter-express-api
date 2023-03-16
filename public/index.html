@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title>Game Analytics</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  </head>
+  <body>
+    <canvas id="myChart"></canvas>
+    <script>
+      // Запрос на получение данных
+      fetch('/gameData')
+        .then(response => response.json())
+        .then(data => {
+          // Обработка полученных данных
+          const labels = [];
+          const values = [];
+          data.forEach(item => {
+            labels.push(item.created_at);
+            values.push(item.event_value);
+          });
+          
+          // Отрисовка графика
+          const ctx = document.getElementById('myChart').getContext('2d');
+          const chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+              labels: labels,
+              datasets: [{
+                label: 'Game Analytics',
+                data: values,
+                backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                borderColor: 'rgba(255, 99, 132, 1)',
+                borderWidth: 1
+              }]
+            },
+            options: {
+              scales: {
+                yAxes: [{
+                  ticks: {
+                    beginAtZero: true
+                  }
+                }]
+              }
+            }
+          });
+        });
+    </script>
+  </body>
+</html>
