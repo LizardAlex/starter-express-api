@@ -7,11 +7,15 @@
   <body>
     <canvas id="myChart"></canvas>
     <script>
+      console.log(123);
       const xhr = new XMLHttpRequest();
       xhr.open("GET", "/gameData");
       xhr.onload = () => {
+        console.log(33122);
         if (xhr.status === 200) {
+          console.log(xhr.responseText);
           const data = JSON.parse(xhr.responseText);
+          console.log(data);
           const games = {};
           const gameNames = [];
 
